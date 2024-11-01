@@ -32,14 +32,14 @@ class Student(Person):
 
     def enroll_course(self, student, course_code):
         if course_code in student['courses']:
-            print(f"{student['name']} is already enrolled in course {course_code}.")
+            print(f"{student['name']} is already enrolled in  {course_code}.")
             return
         for course in Course.courses:
             if course['course_code'] == course_code:
                 student['courses'].append(course_code)
-                course['students'].append(student['name'])
+                course['students'].append(student['student_id'])
                 course_name = course['course_name']
-                print(f"{student['name']} enrolled in course {course_name} (Code: {course_code}).")
+                print(f"{student['name']} enrolled in  {course_name} (Code: {course_code}).")
                 return
         print(f"Course {course_code} not found.")
 
@@ -107,9 +107,16 @@ class Course:
                 print(f"Course Name: {course['course_name']}")
                 print(f"Course Code: {course['course_code']}")
                 print(f"Instructor: {course['instructor']}")
-                print(f"Enrolled Students: {course['students']}")
+                
+                enrolled_Students = []
+                for student_id in course['students']:
+                    for student in Student.students:
+                        if student['student_id'] == student_id:
+                            enrolled_Students.append(student['name'])
+                            break
+                print(f"Enrolled Students: {', '.join(enrolled_Students)}")
                 course_found = True
-
+                break
         if not course_found:
             print("Course not found.")
 

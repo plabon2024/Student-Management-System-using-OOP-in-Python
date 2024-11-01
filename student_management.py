@@ -1,4 +1,3 @@
-
 import json
 
 class Person:
@@ -20,27 +19,27 @@ class Student(Person):
         self.grades = {}
         self.courses = []
 
-    def add_grade(self, course_code, grade):
+    def add_grade(self, student, course_code, grade):
         if course_code not in student['courses']:
-            print(f"{self.name} is not enrolled in {course_code}.")
+            print(f"{student['name']} is not enrolled in {course_code}.")
             return
         for course in Course.courses:
             if course['course_code'] == course_code:
                 course_name = course['course_name']
-                self.grades[course_name] = grade
-                print(f"Grade {grade} added for {self.name} in course {course_name}.")
+                student['grades'][course_name] = grade
+                print(f"Grade {grade} added for {student['name']} in course {course_name}.")
                 break
 
-    def enroll_course(self, course_code):
-        if course_code in self.courses:
-            print(f"{self.name} is already enrolled in course {course_code}.")
+    def enroll_course(self, student, course_code):
+        if course_code in student['courses']:
+            print(f"{student['name']} is already enrolled in course {course_code}.")
             return
         for course in Course.courses:
             if course['course_code'] == course_code:
-                self.courses.append(course_code)
-                course['students'].append(self.student_id)
+                student['courses'].append(course_code)
+                course['students'].append(student['name'])
                 course_name = course['course_name']
-                print(f"{self.name} enrolled in course {course_name} (Code: {course_code}).")
+                print(f"{student['name']} enrolled in course {course_name} (Code: {course_code}).")
                 return
         print(f"Course {course_code} not found.")
 
@@ -50,7 +49,13 @@ class Student(Person):
             if student['student_id'] == student_id:
                 self.display_person_info()
                 print(f"Student ID: {student['student_id']}")
-                print(f"Enrolled Courses: {student['courses']}")
+                enrolled_course_names = []
+                for course_code in student['courses']:
+                    for course in Course.courses:
+                        if course['course_code'] == course_code:
+                            enrolled_course_names.append(course['course_name'])
+                            break
+                print(f"Enrolled Courses: {', '.join(enrolled_course_names)}")
                 print(f"Grades: {student['grades']}")
                 student_found = True
                 break
@@ -111,9 +116,9 @@ class Course:
 
 def save_data():
     with open('students.json', 'w') as f:
-        json.dump(Student.students, f)
+        json.dump(Student.students, f,indent=4)
     with open('courses.json', 'w') as f:
-        json.dump(Course.courses, f)
+        json.dump(Course.courses, f,indent=4)
     print("All student and course data saved successfully.")
 
 def load_data():
@@ -142,16 +147,24 @@ while True:
 
         if choice == "1":
             name = str(input("Enter Name: ")).strip()
+
             while True:
                 try:
                     age = int(input("Enter Age: "))
                     if age < 0:
                         print("Age cannot be negative. Please enter a valid age.")
                     else:
-                        break  # Valid age entered, so exit the loop
+                        break
                 except ValueError:
                     print("Invalid input. Please enter a numeric value.")
-            address = str(input("Enter Address: ")).strip()
+
+            while True:
+                address = input("Enter Address: ").strip()
+                if not address.isnumeric():
+                    break
+                else:
+                    print("Address cannot be a number. Please enter a valid address.")
+
             while True:
                 student_id = input("Enter Student ID: ").strip()
                 duplicate_code = False
@@ -166,7 +179,6 @@ while True:
             student.add_student()
 
         elif choice == "2":
-
             course_name = input("Enter Course Name: ").strip()
             while True:
                 course_code = input("Enter Course Code: ").strip()
@@ -178,34 +190,22 @@ while True:
                         break
                 if not duplicate_code:
                     break
-
             instructor = input("Enter Instructor Name: ").strip()
             course = Course(course_name, course_code, instructor)
             course.add_course()
-
 
         elif choice == "3":
             student_id = input("Enter Student ID: ").strip()
             course_code = input("Enter Course Code: ").strip()
             student_found = False
-            course_found = False
             for student in Student.students:
                 if student['student_id'] == student_id:
                     student_obj = Student(student['name'], student['age'], student['address'], student['student_id'])
-                    student_obj.enroll_course(course_code)
-                    student['courses'] = student_obj.courses  # Update the actual list
+                    student_obj.enroll_course(student, course_code)
                     student_found = True
-                    break
-            for course in Course.courses:
-                if course['course_code'] == course_code:
-                    course_found = True
-                    if student_id not in course['students']:
-                        course['students'].append(student_id)
                     break
             if not student_found:
                 print("Student not found.")
-            if not course_found:
-                print("Course not found.")
 
         elif choice == "4":
             student_id = input("Enter Student ID: ").strip()
@@ -215,12 +215,12 @@ while True:
             for student in Student.students:
                 if student['student_id'] == student_id:
                     student_obj = Student(student['name'], student['age'], student['address'], student['student_id'])
-                    student_obj.add_grade(course_code, grade)
-                    student['grades'] = student_obj.grades  # Update the actual list
+                    student_obj.add_grade(student, course_code, grade)
                     student_found = True
                     break
             if not student_found:
                 print("Student not found.")
+
 
         elif choice == "5":
             student_id = input("Enter Student ID: ").strip()
@@ -251,4 +251,3 @@ while True:
             print("Unexpected  option, please try again.")
     except Exception:
         print("Unexpected  option, please try again.")
-
